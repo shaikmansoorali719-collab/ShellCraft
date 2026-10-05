@@ -11,6 +11,32 @@
  */
 static const builtin_cmd_t BUILTIN_COMMANDS[] = {
     {
+        .name = "cd",
+        .summary = "Change the shell working directory",
+        .description = "Change the current working directory to DIRECTORY.\n"
+                       "If DIRECTORY is omitted or ~, changes to HOME.",
+        .usage = "cd [directory]"
+    },
+    {
+        .name = "echo",
+        .summary = "Display a line of text",
+        .description = "Displays the supplied arguments separated by spaces, followed by a newline.",
+        .usage = "echo [arg ...]"
+    },
+    {
+        .name = "exit",
+        .summary = "Exit ShellCraft",
+        .description = "Exits the ShellCraft session.",
+        .usage = "exit"
+    },
+    {
+        .name = "export",
+        .summary = "Set environment variables",
+        .description = "Set or update environment variables in the shell.\n"
+                       "If no arguments are provided, lists all current environment variables.",
+        .usage = "export [NAME=value ...]"
+    },
+    {
         .name = "help",
         .summary = "Display help information",
         .description = "Display information about builtin commands.\n"
@@ -25,10 +51,16 @@ static const builtin_cmd_t BUILTIN_COMMANDS[] = {
         .usage = "history"
     },
     {
-        .name = "exit",
-        .summary = "Exit ShellCraft",
-        .description = "Exits the ShellCraft session.",
-        .usage = "exit"
+        .name = "pwd",
+        .summary = "Print current working directory",
+        .description = "Print the absolute pathname of the current working directory.",
+        .usage = "pwd"
+    },
+    {
+        .name = "unset",
+        .summary = "Remove environment variables",
+        .description = "Removes specified environment variables from the shell environment.",
+        .usage = "unset NAME ..."
     }
 };
 

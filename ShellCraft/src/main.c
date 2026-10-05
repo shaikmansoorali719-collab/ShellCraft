@@ -10,6 +10,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "expand.h"
+#include "builtin.h"
+#include "executor.h"
 
 int main(void)
 {
@@ -47,10 +49,11 @@ int main(void)
             continue;
         }
 
-        /* Built-in: history */
+        /* Built-in: history (Milestone 1 behavior: not added to history) */
         if (strcmp(line, "history") == 0)
         {
             print_history();
+            set_last_status(0);
             free(line);
             continue;
         }
@@ -58,24 +61,10 @@ int main(void)
         /* Add to history */
         add_history(line);
 
-        /* Built-in: exit */
-        if (strcmp(line, "exit") == 0)
-        {
-            free(line);
-            printf("Exiting...\n");
-            break;
-        }
-
-        /* Built-in: help */
-        if (handle_help(line))
-        {
-            free(line);
-            continue;
-        }
-
         /* Milestone 2: Lexical analysis & tokenization */
         if (!lexer(line, &tokens))
         {
+            set_last_status(2); /* syntax error status */
             free(line);
             continue;
         }
@@ -87,24 +76,38 @@ int main(void)
             continue;
         }
 
+        int should_exit = 0;
+        int exit_code = 0;
+
         /* Milestone 2: Parsing & syntax validation */
         if (parser(&tokens, &pipeline))
         {
-            /* Milestone 2: Advanced environment variable expansion */
+            /* Milestone 2: Advanced environment variable expansion (including $?) */
             expand_variables(&pipeline);
 
-            /* Milestone 2: Display structured pipeline representation */
-            pipeline_print(&pipeline);
+            /* Milestone 3: Process execution */
+            exit_code = execute_pipeline(&pipeline, &should_exit);
 
             /* Free dynamically allocated memory in pipeline */
             pipeline_free(&pipeline);
         }
+        else
+        {
+            set_last_status(2); /* syntax error status */
+        }
 
         free(line);
+
+        if (should_exit)
+        {
+            printf("Exiting...\n");
+            save_history();
+            return exit_code;
+        }
     }
 
     /* Save history to persistent file before exiting */
     save_history();
 
-    return 0;
+    return get_last_status();
 }

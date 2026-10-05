@@ -7,6 +7,7 @@
 #include <ctype.h>
 
 #include "expand.h"
+#include "executor.h"
 
 /*
  * Dynamic string buffer for accumulating expanded characters safely.
@@ -127,9 +128,18 @@ char *expand_string(const char *str)
                 {
                     i++; /* skip '$' */
 
-                    if (i < len && str[i] == '{')
+                    if (i < len && str[i] == '?')
                     {
-                        /* Braced variable: ${VAR} */
+                        /* Previous command exit status: $? */
+                        char status_str[32];
+                        snprintf(status_str, sizeof(status_str), "%d", get_last_status());
+                        buf_append_str(&buf, status_str);
+                        i++;
+                        continue;
+                    }
+                    else if (i < len && str[i] == '{')
+                    {
+                        /* Braced variable: ${VAR} or ${?} */
                         i++; /* skip '{' */
                         char var_name[128];
                         size_t v = 0;
@@ -144,10 +154,19 @@ char *expand_string(const char *str)
                             i++; /* skip '}' */
                         }
 
-                        const char *val = getenv(var_name);
-                        if (val != NULL)
+                        if (strcmp(var_name, "?") == 0)
                         {
-                            buf_append_str(&buf, val);
+                            char status_str[32];
+                            snprintf(status_str, sizeof(status_str), "%d", get_last_status());
+                            buf_append_str(&buf, status_str);
+                        }
+                        else
+                        {
+                            const char *val = getenv(var_name);
+                            if (val != NULL)
+                            {
+                                buf_append_str(&buf, val);
+                            }
                         }
                         continue;
                     }
@@ -205,9 +224,18 @@ char *expand_string(const char *str)
         {
             i++; /* skip '$' */
 
-            if (i < len && str[i] == '{')
+            if (i < len && str[i] == '?')
             {
-                /* Braced variable: ${VAR} */
+                /* Previous command exit status: $? */
+                char status_str[32];
+                snprintf(status_str, sizeof(status_str), "%d", get_last_status());
+                buf_append_str(&buf, status_str);
+                i++;
+                continue;
+            }
+            else if (i < len && str[i] == '{')
+            {
+                /* Braced variable: ${VAR} or ${?} */
                 i++; /* skip '{' */
                 char var_name[128];
                 size_t v = 0;
@@ -222,10 +250,19 @@ char *expand_string(const char *str)
                     i++; /* skip '}' */
                 }
 
-                const char *val = getenv(var_name);
-                if (val != NULL)
+                if (strcmp(var_name, "?") == 0)
                 {
-                    buf_append_str(&buf, val);
+                    char status_str[32];
+                    snprintf(status_str, sizeof(status_str), "%d", get_last_status());
+                    buf_append_str(&buf, status_str);
+                }
+                else
+                {
+                    const char *val = getenv(var_name);
+                    if (val != NULL)
+                    {
+                        buf_append_str(&buf, val);
+                    }
                 }
                 continue;
             }
